@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Loom.Data;
 using Loom.Models;
+using Loom.Services.StockNotifications;
 
 namespace Loom.Services;
 
@@ -11,7 +12,7 @@ public enum OrderCancellationResult
     NotCancellable
 }
 
-public sealed class OrderCancellationService(ApplicationDbContext db)
+public sealed class OrderCancellationService(ApplicationDbContext db, StockNotificationService stockNotifications)
 {
     public async Task<OrderCancellationResult> CancelAsync(int orderId, string? userId = null)
     {
@@ -69,6 +70,16 @@ public sealed class OrderCancellationService(ApplicationDbContext db)
                 throw new InvalidOperationException(
                     $"Cannot restore stock for variant {item.VariantId} while cancelling order {orderId}.");
         }
+
+        // Cancellation is another source of stock availability, just like restocking.
+        var restoredVariantIds = items.Select(item => item.VariantId).Distinct().ToList();
+        var restoredSizes = await db.ProductVariants
+            .Where(variant => restoredVariantIds.Contains(variant.Id))
+            .Select(variant => new { variant.ProductId, variant.Size })
+            .Distinct()
+            .ToListAsync();
+        foreach (var variant in restoredSizes)
+            await stockNotifications.NotifyAvailableSizeAsync(variant.ProductId, variant.Size);
 
         await db.SaveChangesAsync();
         await transaction.CommitAsync();

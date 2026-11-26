@@ -1,8 +1,3 @@
-// Берём корзину из localStorage (её туда пишет script.js с главной)
-window.cart = JSON.parse(localStorage.getItem('cart') || '[]')
-    .filter(item => Number.isInteger(Number(item.variantId)) && Number(item.qty) > 0);
-localStorage.setItem('cart', JSON.stringify(window.cart));
-
 const tbody = document.getElementById('cartTableBody');
 const emptyBlock = document.getElementById('emptyCart');
 const contentBlock = document.getElementById('cartContent');
@@ -10,13 +5,15 @@ const currencyContainer = document.querySelector('[data-currency-code]');
 const currencyFormatter = new Intl.NumberFormat(currencyContainer.dataset.currencyCulture, {
     style: 'currency',
     currency: currencyContainer.dataset.currencyCode,
-    maximumFractionDigits: 0
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
 });
 
 // Сохранение и обновление счётчика в шапке
 function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(window.cart));
-    updateCartBadge(); // функция из script.js
+    const saved = window.LoomCart.save(window.cart);
+    updateCartBadge();
+    return saved; // функция из script.js
 }
 
 // Форматирование цены
@@ -26,15 +23,15 @@ function formatPrice(value) {
 
 // Рендер всей корзины
 function renderCart() {
+    tbody.innerHTML = '';
     if (window.cart.length === 0) {
+        updateTotals();
         emptyBlock.classList.remove('d-none');
         contentBlock.classList.add('d-none');
         return;
     }
     emptyBlock.classList.add('d-none');
     contentBlock.classList.remove('d-none');
-
-    tbody.innerHTML = '';
 
     window.cart.forEach((item, index) => {
         const row = document.createElement('tr');
@@ -50,16 +47,16 @@ function renderCart() {
             </td>
             <td class="text-center">
                 <div class="input-group input-group-sm justify-content-center" style="max-width:120px; margin:auto;">
-                    <button class="btn btn-outline-secondary btn-minus" data-index="${index}">−</button>
+                    <button class="btn btn-outline-secondary btn-minus" data-index="${index}" ${checkoutInProgress ? 'disabled' : ''}>−</button>
                     <input type="text" class="form-control text-center" value="${item.qty}" readonly>
                     <button class="btn btn-outline-secondary btn-plus" data-index="${index}"
-                            ${item.qty >= item.stock ? 'disabled' : ''}>+</button>
+                            ${item.qty >= Math.min(item.stock, 99) || checkoutInProgress ? 'disabled' : ''}>+</button>
                 </div>
             </td>
             <td class="text-end">${formatPrice(item.price)}</td>
             <td class="text-end fw-semibold">${formatPrice(item.price * item.qty)}</td>
             <td class="text-end">
-                <button class="btn btn-sm btn-outline-danger btn-remove" data-index="${index}">✕</button>
+                <button class="btn btn-sm btn-outline-danger btn-remove" data-index="${index}" ${checkoutInProgress ? 'disabled' : ''}>✕</button>
             </td>
         `;
 
@@ -84,8 +81,9 @@ function escapeHtml(value) {
 function attachRowEvents() {
     document.querySelectorAll('.btn-plus').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (checkoutInProgress) return;
             const i = parseInt(btn.dataset.index);
-            if (window.cart[i].qty >= window.cart[i].stock) return;
+            if (checkoutInProgress || window.cart[i].qty >= Math.min(window.cart[i].stock, 99)) return;
             window.cart[i].qty++;
             saveCart();
             renderCart();
@@ -94,6 +92,7 @@ function attachRowEvents() {
 
     document.querySelectorAll('.btn-minus').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (checkoutInProgress) return;
             const i = parseInt(btn.dataset.index);
             if (window.cart[i].qty > 1) {
                 window.cart[i].qty--;
@@ -107,6 +106,7 @@ function attachRowEvents() {
 
     document.querySelectorAll('.btn-remove').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (checkoutInProgress) return;
             const i = parseInt(btn.dataset.index);
             window.cart.splice(i, 1);
             saveCart();
@@ -125,50 +125,97 @@ function updateTotals() {
     document.getElementById('grandTotal').textContent = formatPrice(subtotal);
 }
 
-// Оформление заказа
-document.getElementById('checkoutBtn').addEventListener('click', async () => {
-    if (window.cart.length === 0) return;
+// Keep one checkout identity across network retries and page reloads in this tab.
+const checkoutButton = document.getElementById('checkoutBtn');
+const checkoutMessage = document.getElementById('checkoutMessage');
+const addressSelect = document.getElementById('deliveryAddressId');
+const checkoutInitiallyDisabled = checkoutButton.disabled;
+const pendingStorageKey = `loom.checkout.${currencyContainer.dataset.checkoutUser || 'anonymous'}`;
+let checkoutInProgress = false;
 
-    const lines = window.cart.map(item => ({ variantId: Number(item.variantId), qty: item.qty }));
-    const addressSelect = document.getElementById('deliveryAddressId');
+function showCheckoutMessage(message, success = false) {
+    checkoutMessage.textContent = message;
+    checkoutMessage.className = `alert ${success ? 'alert-success' : 'alert-warning'}`;
+}
 
-    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+function checkoutIdentity(payload) {
+    const fingerprint = JSON.stringify(payload);
+    // Do not send if durable retry storage is unavailable: a lost response must
+    // not turn the next click or reload into a new order.
+    let pending;
+    try { pending = JSON.parse(sessionStorage.getItem(pendingStorageKey) || 'null'); }
+    catch { pending = null; }
+    if (pending?.fingerprint === fingerprint &&
+        typeof pending.key === 'string' && /^[A-Za-z0-9._-]{16,128}$/.test(pending.key)) {
+        return pending.key;
+    }
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    const key = 'checkout-' + Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    sessionStorage.setItem(pendingStorageKey, JSON.stringify({ fingerprint, key }));
+    return key;
+}
 
-    const response = await fetch('/Orders/Create', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'RequestVerificationToken': token
-        },
-        body: JSON.stringify({
-            addressId: addressSelect ? Number(addressSelect.value) : 0,
-            lines
-        })
-    });
-
-    if (response.status === 401) {
-        window.location.href = '/Account/Login?returnUrl=/Cart';
+checkoutButton.addEventListener('click', async () => {
+    if (checkoutInProgress || checkoutInitiallyDisabled || window.cart.length === 0) return;
+    const payload = {
+        addressId: addressSelect ? Number(addressSelect.value) : 0,
+        lines: window.cart.map(item => ({ variantId: item.variantId, qty: item.qty }))
+            .sort((left, right) => left.variantId - right.variantId)
+    };
+    let idempotencyKey;
+    try {
+        idempotencyKey = checkoutIdentity(payload);
+    } catch {
+        showCheckoutMessage('Для безопасного оформления разрешите хранение данных сайта в браузере и повторите попытку.');
         return;
     }
-    if (!response.ok) {
-        if (response.status === 409) {
-            const problem = await response.json();
-            alert(problem.message || 'Вариант товара закончился. Обновите корзину и попробуйте снова.');
-        } else if (response.status === 400) {
-            const problem = await response.json();
-            alert(problem.message || 'Проверьте адрес доставки и попробуйте снова.');
-        } else {
-            alert('Не удалось оформить заказ');
-        }
-        return;
-    }
-
-    const result = await response.json();
-    alert('Заказ #' + result.orderId + ' оформлен!');
-    window.cart = [];
-    saveCart();
+    checkoutInProgress = true;
+    checkoutButton.disabled = true;
+    checkoutButton.textContent = 'Оформляем заказ…';
+    if (addressSelect) addressSelect.disabled = true;
     renderCart();
+    showCheckoutMessage('Отправляем заказ. Пожалуйста, дождитесь ответа.');
+    try {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const response = await fetch('/Orders/Create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token,
+                'Idempotency-Key': idempotencyKey
+            },
+            body: JSON.stringify(payload)
+        });
+        if (response.status === 401) {
+            window.location.href = '/Account/Login?returnUrl=/Cart';
+            return;
+        }
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+            showCheckoutMessage(result?.message || (response.status === 400
+                ? 'Проверьте адрес доставки. Если сессия истекла, обновите страницу.'
+                : 'Не удалось подтвердить оформление. Повторите попытку с тем же составом и адресом — повторный запрос защищён от дубля.'));
+            return;
+        }
+        if (!Number.isSafeInteger(result?.orderId) || result.orderId < 1)
+            throw new Error('Invalid checkout response');
+        // Remove cart contents before clearing the retry identity. If storage
+        // cleanup fails, retrying still returns the already-created order.
+        window.cart = [];
+        const cartSaved = saveCart();
+        if (cartSaved) {
+            try { sessionStorage.removeItem(pendingStorageKey); } catch { /* harmless stale identity */ }
+        }
+        showCheckoutMessage(`Заказ #${result.orderId} оформлен. Он доступен в личном кабинете.`, true);
+    } catch {
+        showCheckoutMessage('Не удалось получить подтверждение заказа. Повторите попытку с тем же составом и адресом — сохранённый ключ защитит от дубля.');
+    } finally {
+        checkoutInProgress = false;
+        checkoutButton.disabled = checkoutInitiallyDisabled;
+        checkoutButton.textContent = 'Оформить заказ';
+        if (addressSelect) addressSelect.disabled = false;
+        renderCart();
+    }
 });
 
-// Старт
 renderCart();

@@ -123,7 +123,7 @@
                                             {
                                                 <small class="text-muted">— @item.VariantSize @item.VariantColor</small>
                                             }
-                                            <span>× @item.Quantity · @((item.UnitPrice * item.Quantity).ToString("C0", currencyCulture))</span>
+                                            <span>× @item.Quantity · @((item.UnitPrice * item.Quantity).ToString("C2", currencyCulture))</span>
                                         </li>
                                     }
                                 </ul>
@@ -136,7 +136,7 @@
                                 }
                             </td>
                             <td class="text-nowrap">
-                                @order.Total.ToString("C0", currencyCulture)
+                                @order.Total.ToString("C2", currencyCulture)
                                 <div class="small text-muted">@order.PaymentMethod</div>
                             </td>
                             <td>
