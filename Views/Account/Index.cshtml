@@ -131,7 +131,7 @@
             }
         </td>
         <td>@o.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</td>
-        <td>@o.Total.ToString("C0", currencyCulture)</td>
+        <td>@o.Total.ToString("C2", currencyCulture)</td>
         <td>
             <span class="badge bg-secondary">@o.Status</span>
             <div class="small text-muted mt-1">@o.PaymentMethod · @o.PaymentStatus</div>
@@ -284,6 +284,9 @@
 
 @section Scripts {
     <script>
+        if (window.location.hash === '#orders') {
+            bootstrap.Tab.getOrCreateInstance(document.getElementById('orders-tab')).show();
+        }
         if (window.location.hash === '#addresses') {
             bootstrap.Tab.getOrCreateInstance(document.getElementById('addresses-tab')).show();
         }

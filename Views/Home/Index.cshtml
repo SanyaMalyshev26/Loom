@@ -65,7 +65,7 @@
                         </h5>
                         <a href="/Products/@p.Id" class="btn btn-outline-secondary btn-sm mb-2">Подробнее о товаре</a>
                         <p class="card-text text-muted small">@p.Rating.ToString("0.##", currencyCulture) ★</p>
-                        <p class="fw-bold fs-5 mt-auto mb-2">@p.Price.ToString("C0", currencyCulture)</p>
+                        <p class="fw-bold fs-5 mt-auto mb-2">@p.Price.ToString("C2", currencyCulture)</p>
                         <label class="form-label small mt-2" for="variant-@p.Id">Размер и цвет</label>
                         <select id="variant-@p.Id" class="form-select variant-select mb-2">
                             <option value="">Выберите вариант</option>

@@ -5,9 +5,10 @@
     var currencyCulture = System.Globalization.CultureInfo.GetCultureInfo(Configuration["Store:Culture"] ?? "ru-RU");
 }
 
-<main class="container my-5" data-currency-code="@currencyCode" data-currency-culture="@currencyCulture.Name">
+<main class="container my-5" data-checkout-user="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" data-currency-code="@currencyCode" data-currency-culture="@currencyCulture.Name">
     @Html.AntiForgeryToken()
     <h2 class="mb-4">Корзина</h2>
+    <div id="checkoutMessage" class="alert d-none" role="status" aria-live="polite"></div>
 
     <!-- Пустая корзина -->
     <div id="emptyCart" class="text-center py-5 d-none">
@@ -76,7 +77,7 @@
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Сумма</span>
-                    <span id="subtotal">@(0m.ToString("C0", currencyCulture))</span>
+                    <span id="subtotal">@(0m.ToString("C2", currencyCulture))</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3">
                     <span class="text-muted">Доставка</span>
@@ -85,7 +86,7 @@
                 <hr>
                 <div class="d-flex justify-content-between fw-bold fs-5 mb-4">
                     <span>К оплате</span>
-                    <span id="grandTotal">@(0m.ToString("C0", currencyCulture))</span>
+                    <span id="grandTotal">@(0m.ToString("C2", currencyCulture))</span>
                 </div>
                 <button class="btn btn-primary w-100 btn-lg" id="checkoutBtn"
                         disabled="@(User.Identity?.IsAuthenticated == true &&

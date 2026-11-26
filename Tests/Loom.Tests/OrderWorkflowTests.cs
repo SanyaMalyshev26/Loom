@@ -850,7 +850,7 @@ public sealed class OrderWorkflowTests : IAsyncLifetime
 
         var restock = await PostFormAsync(
             $"/Admin/Products/1/Variants/{variantId}/Update",
-            new Dictionary<string, string> { ["stock"] = "4", ["isActive"] = "true" });
+            new Dictionary<string, string> { ["stock"] = "4", ["isActive"] = "true", ["expectedStock"] = "0", ["expectedIsActive"] = "true" });
         Assert.Equal(HttpStatusCode.OK, restock.StatusCode);
         DateTime notifiedAt;
         using (var scope = _factory.Services.CreateScope())
@@ -866,7 +866,7 @@ public sealed class OrderWorkflowTests : IAsyncLifetime
 
         var sellOut = await PostFormAsync(
             $"/Admin/Products/1/Variants/{variantId}/Update",
-            new Dictionary<string, string> { ["stock"] = "0", ["isActive"] = "true" });
+            new Dictionary<string, string> { ["stock"] = "0", ["isActive"] = "true", ["expectedStock"] = "4", ["expectedIsActive"] = "true" });
         Assert.Equal(HttpStatusCode.OK, sellOut.StatusCode);
         var accountAfterSellOut = WebUtility.HtmlDecode(await _client.GetStringAsync("/Account/Index#stock-notifications"));
         Assert.Contains("Сейчас размер снова закончился", accountAfterSellOut);
@@ -1592,6 +1592,51 @@ public sealed class OrderWorkflowTests : IAsyncLifetime
                 new[] { OrderHistoryEventTypes.Created, OrderHistoryEventTypes.AdminCancelled },
                 history.Select(entry => entry.EventType));
         }
+    }
+
+    [Fact]
+    public async Task Stale_admin_stock_form_does_not_restore_a_sold_unit()
+    {
+        var variantId = await CreateVariantAsync(stock: 2);
+        await CreateOrderAsync(variantId, quantity: 1);
+        var response = await PostFormAsync($"/Admin/Products/1/Variants/{variantId}/Update",
+            new Dictionary<string, string>
+            {
+                ["stock"] = "2", ["isActive"] = "true",
+                ["expectedStock"] = "2", ["expectedIsActive"] = "true"
+            });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(1, await GetStockAsync(variantId));
+        Assert.Contains("уже изменились", WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
+    }
+
+    [Fact]
+    public async Task Stock_form_without_original_values_cannot_overwrite_stock()
+    {
+        var variantId = await CreateVariantAsync(stock: 2);
+        await PostFormAsync($"/Admin/Products/1/Variants/{variantId}/Update",
+            new Dictionary<string, string> { ["stock"] = "10", ["isActive"] = "true" });
+        Assert.Equal(2, await GetStockAsync(variantId));
+    }
+
+    [Fact]
+    public async Task Cancelling_an_order_notifies_waiting_size_subscribers()
+    {
+        var variantId = await CreateVariantAsync(stock: 1);
+        var orderId = await CreateOrderAsync(variantId, quantity: 1);
+        var notificationId = await CreateStockNotificationAsync(TestUserId);
+        await PostFormAsync($"/Account/CancelOrder/{orderId}");
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var firstNotice = await db.StockNotifications.Where(n => n.Id == notificationId)
+            .Select(n => n.NotifiedAt).SingleAsync();
+        Assert.NotNull(firstNotice);
+        Assert.Equal(1, await GetStockAsync(variantId));
+        await PostFormAsync($"/Account/CancelOrder/{orderId}");
+        var repeatedNotice = await db.StockNotifications.AsNoTracking().Where(n => n.Id == notificationId)
+            .Select(n => n.NotifiedAt).SingleAsync();
+        Assert.Equal(firstNotice, repeatedNotice);
+        Assert.Equal(1, await GetStockAsync(variantId));
     }
 
     private async Task<int> CreateVariantAsync(int stock, string size = "M")

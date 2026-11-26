@@ -396,21 +396,34 @@ public class ProductsAdminController : Controller
         int variantId,
         int stock,
         bool isActive,
+        int? expectedStock,
+        bool? expectedIsActive,
         CancellationToken cancellationToken)
     {
         var variant = await _db.ProductVariants
             .SingleOrDefaultAsync(item => item.Id == variantId && item.ProductId == id);
         if (variant == null) return NotFound();
-        if (!ModelState.IsValid || stock < 0)
+        if (!ModelState.IsValid || stock < 0 || expectedStock is null or < 0 || expectedIsActive is null)
         {
-            TempData["Error"] = "Остаток не может быть отрицательным.";
+            TempData["Error"] = "Проверьте остаток и обновите страницу вариантов перед сохранением.";
             return RedirectToAction(nameof(Variants), new { id });
         }
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-        variant.Stock = stock;
-        variant.IsActive = isActive;
-        await _db.SaveChangesAsync(cancellationToken);
+        // Compare the submitted form snapshot in the UPDATE itself: a sale may have
+        // changed stock after the administrator opened the page.
+        var updated = await _db.ProductVariants
+            .Where(item => item.Id == variantId && item.ProductId == id &&
+                item.Stock == expectedStock.Value && item.IsActive == expectedIsActive.Value)
+            .ExecuteUpdateAsync(updates => updates
+                .SetProperty(item => item.Stock, stock)
+                .SetProperty(item => item.IsActive, isActive), cancellationToken);
+        if (updated != 1)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            TempData["Error"] = "Остаток или доступность уже изменились. Проверьте актуальные данные и повторите изменение.";
+            return RedirectToAction(nameof(Variants), new { id });
+        }
         await _stockNotificationService.NotifyAvailableSizeAsync(id, variant.Size, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 

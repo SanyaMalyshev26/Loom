@@ -1,0 +1,32 @@
+name: Loom checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test .NET application
+        run: dotnet test Tests/Loom.Tests/Loom.Tests.csproj --configuration Release
+      - name: Test browser cart logic
+        run: node --test Tests/Frontend/cart.test.cjs
+      - name: Install Python dependencies
+        run: python -m pip install -r image-processor/requirements.txt
+      - name: Test Python analytics
+        run: python -m unittest discover -s image-processor -p 'test_*.py' -v
