@@ -1,6 +1,6 @@
-using ShopCoursework.Services.Analytics;
+using Loom.Services.Analytics;
 
-namespace ShopCoursework.Models;
+namespace Loom.Models;
 
 public sealed record SalesDashboardViewModel(
     SalesReport Report,

@@ -1,4 +1,4 @@
-@model ShopCoursework.Models.ApplicationUser
+@model Loom.Models.ApplicationUser
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Личный кабинет";
@@ -104,7 +104,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var o in (List<ShopCoursework.Models.Order>)ViewBag.Orders)
+                        @foreach (var o in (List<Loom.Models.Order>)ViewBag.Orders)
 {
     <tr>
         <td>
@@ -152,8 +152,8 @@
             }
         </td>
         <td>
-            @if (o.Status == ShopCoursework.Models.OrderStatuses.New ||
-                 o.Status == ShopCoursework.Models.OrderStatuses.Confirmed)
+            @if (o.Status == Loom.Models.OrderStatuses.New ||
+                 o.Status == Loom.Models.OrderStatuses.Confirmed)
             {
                 <form method="post" asp-action="CancelOrder" asp-route-id="@o.Id"
                       onsubmit="return confirm('Отменить заказ #@o.Id?');">
@@ -170,7 +170,7 @@
 
         <div class="tab-pane fade" id="stock-notifications" role="tabpanel">
             @{
-                var stockNotifications = (List<ShopCoursework.Models.StockNotification>)ViewBag.StockNotifications;
+                var stockNotifications = (List<Loom.Models.StockNotification>)ViewBag.StockNotifications;
             }
             <h5 class="mb-3">Размеры, за которыми слежу</h5>
             @if (stockNotifications.Count == 0)
@@ -230,7 +230,7 @@
         <!-- АДРЕСА -->
                 <div class="tab-pane fade" id="addresses" role="tabpanel">
             @{
-                var addresses = (List<ShopCoursework.Models.Address>)ViewBag.Addresses;
+                var addresses = (List<Loom.Models.Address>)ViewBag.Addresses;
             }
 
             @if (addresses.Count == 0)

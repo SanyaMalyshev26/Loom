@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
+using Loom.Data;
 using Microsoft.AspNetCore.Identity;
-using ShopCoursework.Models;
-using ShopCoursework.Services;
-using ShopCoursework.Services.Analytics;
-using ShopCoursework.Services.Images;
-using ShopCoursework.Services.StockNotifications;
+using Loom.Models;
+using Loom.Services;
+using Loom.Services.Analytics;
+using Loom.Services.Images;
+using Loom.Services.StockNotifications;
 
 
 var builder = WebApplication.CreateBuilder(args);

@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
-using ShopCoursework.Services.StockNotifications;
+using Loom.Data;
+using Loom.Models;
+using Loom.Services.StockNotifications;
 
-namespace ShopCoursework.Controllers;
+namespace Loom.Controllers;
 
 [Route("Products")]
 [AllowAnonymous]

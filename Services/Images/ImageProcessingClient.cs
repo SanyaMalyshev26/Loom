@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace ShopCoursework.Services.Images;
+namespace Loom.Services.Images;
 
 public sealed record ProcessedImage(string ImageUrl, string ThumbnailUrl, int Width, int Height);
 

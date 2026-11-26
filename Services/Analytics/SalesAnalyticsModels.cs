@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 
-namespace ShopCoursework.Services.Analytics;
+namespace Loom.Services.Analytics;
 
 public sealed record SalesSummary(int Orders, decimal Revenue, decimal PaidRevenue, int UnitsSold);
 

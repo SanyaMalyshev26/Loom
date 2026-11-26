@@ -1,11 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY global.json ShopCoursework.csproj ./
-RUN dotnet restore ShopCoursework.csproj
+COPY global.json Loom.csproj ./
+RUN dotnet restore Loom.csproj
 
 COPY . .
-RUN dotnet publish ShopCoursework.csproj \
+RUN dotnet publish Loom.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish \
@@ -22,4 +22,4 @@ ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 USER $APP_UID
 
-ENTRYPOINT ["dotnet", "ShopCoursework.dll"]
+ENTRYPOINT ["dotnet", "Loom.dll"]

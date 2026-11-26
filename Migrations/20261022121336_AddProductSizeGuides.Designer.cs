@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ShopCoursework.Data;
+using Loom.Data;
 
 #nullable disable
 
-namespace ShopCoursework.Migrations
+namespace Loom.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20261022121336_AddProductSizeGuides")]
@@ -148,7 +148,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Address", b =>
+            modelBuilder.Entity("Loom.Models.Address", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -178,7 +178,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("Addresses");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.ApplicationUser", b =>
+            modelBuilder.Entity("Loom.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -250,7 +250,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Order", b =>
+            modelBuilder.Entity("Loom.Models.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -304,7 +304,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.OrderItem", b =>
+            modelBuilder.Entity("Loom.Models.OrderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -349,7 +349,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Product", b =>
+            modelBuilder.Entity("Loom.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -415,7 +415,7 @@ namespace ShopCoursework.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.ProductSizeGuide", b =>
+            modelBuilder.Entity("Loom.Models.ProductSizeGuide", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -462,7 +462,7 @@ namespace ShopCoursework.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.ProductVariant", b =>
+            modelBuilder.Entity("Loom.Models.ProductVariant", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -516,7 +516,7 @@ namespace ShopCoursework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -525,7 +525,7 @@ namespace ShopCoursework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -540,7 +540,7 @@ namespace ShopCoursework.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -549,16 +549,16 @@ namespace ShopCoursework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Order", b =>
+            modelBuilder.Entity("Loom.Models.Order", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", "User")
+                    b.HasOne("Loom.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -567,21 +567,21 @@ namespace ShopCoursework.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.OrderItem", b =>
+            modelBuilder.Entity("Loom.Models.OrderItem", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.Order", "Order")
+                    b.HasOne("Loom.Models.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopCoursework.Models.Product", "Product")
+                    b.HasOne("Loom.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopCoursework.Models.ProductVariant", "ProductVariant")
+                    b.HasOne("Loom.Models.ProductVariant", "ProductVariant")
                         .WithMany()
                         .HasForeignKey("ProductVariantId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -593,9 +593,9 @@ namespace ShopCoursework.Migrations
                     b.Navigation("ProductVariant");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.ProductSizeGuide", b =>
+            modelBuilder.Entity("Loom.Models.ProductSizeGuide", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.Product", "Product")
+                    b.HasOne("Loom.Models.Product", "Product")
                         .WithMany("SizeGuides")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -604,9 +604,9 @@ namespace ShopCoursework.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.ProductVariant", b =>
+            modelBuilder.Entity("Loom.Models.ProductVariant", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.Product", "Product")
+                    b.HasOne("Loom.Models.Product", "Product")
                         .WithMany("Variants")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -615,12 +615,12 @@ namespace ShopCoursework.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Order", b =>
+            modelBuilder.Entity("Loom.Models.Order", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Product", b =>
+            modelBuilder.Entity("Loom.Models.Product", b =>
                 {
                     b.Navigation("SizeGuides");
 

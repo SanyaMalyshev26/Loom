@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ShopCoursework.Models;
+namespace Loom.Models;
 
 public class Product
 {

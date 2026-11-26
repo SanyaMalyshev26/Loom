@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ShopCoursework.Migrations
+namespace Loom.Migrations
 {
     /// <inheritdoc />
     public partial class AddOrders : Migration

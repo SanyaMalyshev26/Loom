@@ -21,7 +21,7 @@ SUPPORTED_FORMATS = {"JPEG", "PNG", "WEBP"}
 
 Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
 
-app = FastAPI(title="ShopCoursework image processor", docs_url=None, redoc_url=None)
+app = FastAPI(title="Loom image processor", docs_url=None, redoc_url=None)
 
 
 class ProcessedImage(BaseModel):

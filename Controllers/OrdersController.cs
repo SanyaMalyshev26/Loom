@@ -6,10 +6,10 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
+using Loom.Data;
+using Loom.Models;
 
-namespace ShopCoursework.Controllers;
+namespace Loom.Controllers;
 
 public class CartLine
 {

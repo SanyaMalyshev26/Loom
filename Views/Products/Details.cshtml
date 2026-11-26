@@ -1,6 +1,6 @@
 @using System.Globalization
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
-@model ShopCoursework.Models.Product
+@model Loom.Models.Product
 @{
     ViewData["Title"] = Model.Name;
     var currencyCulture = CultureInfo.GetCultureInfo(Configuration["Store:Culture"] ?? "ru-RU");

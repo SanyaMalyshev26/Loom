@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
+using Loom.Data;
+using Loom.Models;
 
-namespace ShopCoursework.Controllers;
+namespace Loom.Controllers;
 
 public class HomeController : Controller
 {

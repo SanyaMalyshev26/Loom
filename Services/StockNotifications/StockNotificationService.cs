@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
+using Loom.Data;
 
-namespace ShopCoursework.Services.StockNotifications;
+namespace Loom.Services.StockNotifications;
 
 public sealed class StockNotificationService(ApplicationDbContext db)
 {

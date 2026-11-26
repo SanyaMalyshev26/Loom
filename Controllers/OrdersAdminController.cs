@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
-using ShopCoursework.Services.Csv;
-using ShopCoursework.Services;
+using Loom.Data;
+using Loom.Models;
+using Loom.Services.Csv;
+using Loom.Services;
 
-namespace ShopCoursework.Controllers;
+namespace Loom.Controllers;
 
 [Authorize(Roles = "Admin")]
 [Route("Admin/Orders")]

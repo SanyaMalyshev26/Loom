@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
+using Loom.Data;
+using Loom.Models;
 
-namespace ShopCoursework.Services;
+namespace Loom.Services;
 
 public enum OrderCancellationResult
 {

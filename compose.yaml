@@ -34,7 +34,7 @@ services:
       ImageProcessing__BaseUrl: "http://image-processor:8000/"
       AnalyticsProcessing__BaseUrl: "http://image-processor:8000/"
       AdminEmail: "${ADMIN_EMAIL:-}"
-      Store__Name: "${STORE_NAME:-ShopCoursework}"
+      Store__Name: "${STORE_NAME:-Loom}"
       Store__CurrencyCode: "${STORE_CURRENCY_CODE:-RUB}"
       Store__Culture: "${STORE_CULTURE:-ru-RU}"
       Inventory__LowStockThreshold: "${INVENTORY_LOW_STOCK_THRESHOLD:-5}"

@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ShopCoursework.Data;
+using Loom.Data;
 
 #nullable disable
 
-namespace ShopCoursework.Migrations
+namespace Loom.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20261018102227_AddIdentity")]
@@ -148,7 +148,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.ApplicationUser", b =>
+            modelBuilder.Entity("Loom.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -220,7 +220,7 @@ namespace ShopCoursework.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ShopCoursework.Models.Product", b =>
+            modelBuilder.Entity("Loom.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -294,7 +294,7 @@ namespace ShopCoursework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -303,7 +303,7 @@ namespace ShopCoursework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -318,7 +318,7 @@ namespace ShopCoursework.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -327,7 +327,7 @@ namespace ShopCoursework.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("ShopCoursework.Models.ApplicationUser", null)
+                    b.HasOne("Loom.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

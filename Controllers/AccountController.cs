@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
-using ShopCoursework.Services;
+using Loom.Data;
+using Loom.Models;
+using Loom.Services;
 
-namespace ShopCoursework.Controllers;
+namespace Loom.Controllers;
 
 public class AccountController : Controller
 {

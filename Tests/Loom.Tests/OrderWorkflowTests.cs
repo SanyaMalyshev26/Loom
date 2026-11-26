@@ -17,13 +17,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ShopCoursework.Data;
-using ShopCoursework.Models;
-using ShopCoursework.Services.Analytics;
-using ShopCoursework.Services.Images;
+using Loom.Data;
+using Loom.Models;
+using Loom.Services.Analytics;
+using Loom.Services.Images;
 using Xunit;
 
-namespace ShopCoursework.Tests;
+namespace Loom.Tests;
 
 public sealed class OrderWorkflowTests : IAsyncLifetime
 {
@@ -36,7 +36,7 @@ public sealed class OrderWorkflowTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _databasePath = Path.Combine(Path.GetTempPath(), $"shopcoursework-tests-{Guid.NewGuid():N}.db");
+        _databasePath = Path.Combine(Path.GetTempPath(), $"loom-tests-{Guid.NewGuid():N}.db");
         var connectionString = $"Data Source={_databasePath}";
         var dbOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlite(connectionString)

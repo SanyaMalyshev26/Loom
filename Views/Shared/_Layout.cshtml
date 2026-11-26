@@ -1,9 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<ShopCoursework.Models.ApplicationUser> SignInManager
+@inject SignInManager<Loom.Models.ApplicationUser> SignInManager
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 @{
-    var storeName = Configuration["Store:Name"] ?? "ShopCoursework";
+    var storeName = Configuration["Store:Name"] ?? "Loom";
 }
 
 <!DOCTYPE html>

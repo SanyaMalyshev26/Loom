@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Data;
+using Loom.Data;
 
-namespace ShopCoursework.Controllers;
+namespace Loom.Controllers;
 
 public class CartController : Controller
 {

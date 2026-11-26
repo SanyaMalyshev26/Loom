@@ -1,4 +1,4 @@
-namespace ShopCoursework.Models;
+namespace Loom.Models;
 
 public static class PaymentMethods
 {

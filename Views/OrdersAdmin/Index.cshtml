@@ -1,4 +1,4 @@
-@model ShopCoursework.Models.AdminOrdersViewModel
+@model Loom.Models.AdminOrdersViewModel
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Админка: заказы";
@@ -43,7 +43,7 @@
             <label for="orderStatus" class="form-label">Статус заказа</label>
             <select id="orderStatus" name="status" class="form-select">
                 <option value="">Все статусы</option>
-                @foreach (var status in ShopCoursework.Models.AdminOrdersViewModel.StatusOptions)
+                @foreach (var status in Loom.Models.AdminOrdersViewModel.StatusOptions)
                 {
                     <option value="@status" selected="@(Model.Status == status)">@status</option>
                 }
@@ -53,7 +53,7 @@
             <label for="paymentStatus" class="form-label">Оплата</label>
             <select id="paymentStatus" name="paymentStatus" class="form-select">
                 <option value="">Любой статус оплаты</option>
-                @foreach (var paymentStatus in ShopCoursework.Models.AdminOrdersViewModel.PaymentStatusOptions)
+                @foreach (var paymentStatus in Loom.Models.AdminOrdersViewModel.PaymentStatusOptions)
                 {
                     <option value="@paymentStatus" selected="@(Model.PaymentStatus == paymentStatus)">@paymentStatus</option>
                 }

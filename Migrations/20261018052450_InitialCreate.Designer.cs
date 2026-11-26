@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ShopCoursework.Data;
+using Loom.Data;
 
 #nullable disable
 
-namespace ShopCoursework.Migrations
+namespace Loom.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20261018052450_InitialCreate")]
@@ -19,7 +19,7 @@ namespace ShopCoursework.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.32");
 
-            modelBuilder.Entity("ShopCoursework.Models.Product", b =>
+            modelBuilder.Entity("Loom.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

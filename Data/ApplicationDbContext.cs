@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using ShopCoursework.Models;
+using Loom.Models;
 
-namespace ShopCoursework.Data;
+namespace Loom.Data;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {

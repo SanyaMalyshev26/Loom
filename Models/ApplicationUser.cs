@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace ShopCoursework.Models;
+namespace Loom.Models;
 
 public class ApplicationUser : IdentityUser
 {

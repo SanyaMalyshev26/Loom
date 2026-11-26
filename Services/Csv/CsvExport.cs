@@ -1,4 +1,4 @@
-namespace ShopCoursework.Services.Csv;
+namespace Loom.Services.Csv;
 
 public static class CsvExport
 {

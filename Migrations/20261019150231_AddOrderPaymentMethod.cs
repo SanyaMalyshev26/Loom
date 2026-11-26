@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace ShopCoursework.Migrations
+namespace Loom.Migrations
 {
     /// <inheritdoc />
     public partial class AddOrderPaymentMethod : Migration

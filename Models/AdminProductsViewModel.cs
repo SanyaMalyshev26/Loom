@@ -1,4 +1,4 @@
-namespace ShopCoursework.Models;
+namespace Loom.Models;
 
 public sealed record AdminProductsViewModel(
     IReadOnlyList<Product> Products,
