@@ -50,6 +50,7 @@ public class HomeController : Controller
 
         var products = await query
             .Include(product => product.Variants.Where(variant => variant.IsActive))
+            .Include(product => product.SizeGuides)
             .ToListAsync();
         if (!string.IsNullOrEmpty(search))
         {
@@ -93,6 +94,8 @@ public class HomeController : Controller
             TotalPages = totalPages
         });
     }
+
+    public IActionResult About() => View();
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

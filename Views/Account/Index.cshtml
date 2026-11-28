@@ -1,294 +1,244 @@
-@model Loom.Models.ApplicationUser
+@model ApplicationUser
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Личный кабинет";
-    var currencyCulture = System.Globalization.CultureInfo.GetCultureInfo(Configuration["Store:Culture"] ?? "ru-RU");
+    var culture = System.Globalization.CultureInfo.GetCultureInfo(Configuration["Store:Culture"] ?? "ru-RU");
+    var orders = (List<Order>)ViewBag.Orders;
+    var addresses = (List<Address>)ViewBag.Addresses;
+    var subscriptions = (List<StockNotification>)ViewBag.StockNotifications;
 }
 
-<main class="container my-5">
-        @if (TempData["Message"] != null)
-    {
-        <div class="alert alert-success">@TempData["Message"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <div>
-        <h2 class="mb-1">Личный кабинет</h2>
-        <p class="text-muted mb-0">Здравствуйте, <strong>@Model.FirstName @Model.LastName</strong>!</p>
-    </div>
-    <form method="post" asp-controller="Account" asp-action="Logout">
-        <button type="submit" class="btn btn-outline-danger">Выйти</button>
-    </form>
-</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+}
 
-    <ul class="nav nav-tabs" id="accountTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">👤 Профиль</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">📦 Мои заказы</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="addresses-tab" data-bs-toggle="tab" data-bs-target="#addresses" type="button" role="tab">📍 Адреса доставки</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="stock-notifications-tab" data-bs-toggle="tab"
-                    data-bs-target="#stock-notifications" type="button" role="tab">
-                🔔 Поступления
+<main class="account-page container">
+    <header class="account-heading">
+        <div>
+            <h1>Личный кабинет</h1>
+            <p>@Model.FirstName @Model.LastName</p>
+        </div>
+        <form method="post" asp-action="Logout">
+            <button type="submit" class="account-link">Выйти</button>
+        </form>
+    </header>
+
+    @if (TempData["Message"] is string message)
+    {
+        <p class="account-feedback" role="status">@message</p>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <p class="account-feedback is-error" role="alert">@error</p>
+    }
+
+    <div class="account-layout">
+        <div class="nav account-nav" id="accountTabs" role="tablist" aria-label="Разделы личного кабинета">
+            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile"
+                    type="button" role="tab" aria-controls="profile" aria-selected="true">Профиль</button>
+            <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders"
+                    type="button" role="tab" aria-controls="orders" aria-selected="false" tabindex="-1">
+                Заказы <span>@orders.Count</span>
             </button>
-        </li>
-    </ul>
-
-    <div class="tab-content bg-white p-4 border border-top-0 rounded-bottom shadow-sm" id="accountTabsContent">
-
-        <!-- ПРОФИЛЬ -->
-        <div class="tab-pane fade show active" id="profile" role="tabpanel">
-            <form id="profileForm" class="row g-3" method="post" asp-action="UpdateProfile">
-                <div class="col-md-6">
-                    <label class="form-label">Имя</label>
-                    <input type="text" class="form-control" name="firstName" value="@Model.FirstName">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Фамилия</label>
-                    <input type="text" class="form-control" name="lastName" value="@Model.LastName">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" value="@Model.Email" readonly>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Телефон</label>
-                    <input type="tel" class="form-control" name="phone" value="@Model.PhoneNumber">
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                </div>
-            </form>
-
-            <hr class="my-4">
-
-            <h5 class="mb-3">Смена пароля</h5>
-            <form id="passwordForm" class="row g-3" method="post" asp-action="ChangePassword">
-                <div class="col-md-4">
-                    <label class="form-label">Текущий пароль</label>
-                    <input type="password" class="form-control" name="currentPassword">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Новый пароль</label>
-                    <input type="password" class="form-control" name="newPassword">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Повторите новый</label>
-                    <input type="password" class="form-control" name="confirmPassword">
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-outline-primary">Изменить пароль</button>
-                </div>
-            </form>
+            <button class="nav-link" id="addresses-tab" data-bs-toggle="tab" data-bs-target="#addresses"
+                    type="button" role="tab" aria-controls="addresses" aria-selected="false" tabindex="-1">
+                Адреса <span>@addresses.Count</span>
+            </button>
+            <button class="nav-link" id="stock-notifications-tab" data-bs-toggle="tab" data-bs-target="#stock-notifications"
+                    type="button" role="tab" aria-controls="stock-notifications" aria-selected="false" tabindex="-1">
+                Поступления <span>@subscriptions.Count</span>
+            </button>
         </div>
 
-        <!-- ЗАКАЗЫ -->
-        <div class="tab-pane fade" id="orders" role="tabpanel">
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead>
-                        <tr>
-                            <th>№ заказа</th>
-                            <th>Дата</th>
-                            <th>Сумма</th>
-                            <th>Статус</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var o in (List<Loom.Models.Order>)ViewBag.Orders)
-{
-    <tr>
-        <td>
-            #@o.Id
-            @if (o.Items.Count > 0)
-            {
-                <ul class="small text-muted mb-0 ps-3">
-                    @foreach (var item in o.Items)
-                    {
-                        <li>
-                            @(item.ProductName ?? item.Product?.Name)
-                            @if (!string.IsNullOrEmpty(item.VariantSize) || !string.IsNullOrEmpty(item.VariantColor))
-                            {
-                                <span>— @item.VariantSize @item.VariantColor</span>
-                            }
-                            × @item.Quantity
-                        </li>
-                    }
-                </ul>
-            }
-            @if (!string.IsNullOrEmpty(o.ShippingCity) && !string.IsNullOrEmpty(o.ShippingStreet))
-            {
-                <div class="small text-muted">Доставка: @o.ShippingAddressTitle, г. @o.ShippingCity, @o.ShippingStreet</div>
-            }
-        </td>
-        <td>@o.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</td>
-        <td>@o.Total.ToString("C0", currencyCulture)</td>
-        <td>
-            <span class="badge bg-secondary">@o.Status</span>
-            <div class="small text-muted mt-1">@o.PaymentMethod · @o.PaymentStatus</div>
-            @if (o.History.Count > 0)
-            {
-                <details class="mt-2">
-                    <summary class="small">История (@o.History.Count)</summary>
-                    <ul class="small text-muted ps-3 mt-2 mb-0">
-                        @foreach (var entry in o.History)
-                        {
-                            <li>
-                                @entry.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") —
-                                @entry.EventType: @entry.Status · @entry.PaymentStatus
-                            </li>
-                        }
-                    </ul>
-                </details>
-            }
-        </td>
-        <td>
-            @if (o.Status == Loom.Models.OrderStatuses.New ||
-                 o.Status == Loom.Models.OrderStatuses.Confirmed)
-            {
-                <form method="post" asp-action="CancelOrder" asp-route-id="@o.Id"
-                      onsubmit="return confirm('Отменить заказ #@o.Id?');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Отменить</button>
-                </form>
-            }
-        </td>
-    </tr>
-}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="stock-notifications" role="tabpanel">
-            @{
-                var stockNotifications = (List<Loom.Models.StockNotification>)ViewBag.StockNotifications;
-            }
-            <h5 class="mb-3">Размеры, за которыми слежу</h5>
-            @if (stockNotifications.Count == 0)
-            {
-                <p class="text-muted">
-                    Подписок пока нет. На странице товара можно подписаться на отсутствующий размер.
-                </p>
-            }
-            else
-            {
-                <div class="list-group">
-                    @foreach (var notification in stockNotifications)
-                    {
-                        var currentStock = notification.Product?.Variants
-                            .Where(variant => string.Equals(
-                                variant.Size,
-                                notification.Size,
-                                StringComparison.OrdinalIgnoreCase))
-                            .Sum(variant => variant.Stock) ?? 0;
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <a href="/Products/@notification.ProductId" class="fw-semibold">
-                                        @notification.Product?.Name
-                                    </a>
-                                    <div>Размер @notification.Size</div>
-                                    @if (notification.NotifiedAt.HasValue)
-                                    {
-                                        <small class="text-success">
-                                            Поступление было @notification.NotifiedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm").
-                                            @if (currentStock > 0)
-                                            {
-                                                <span>Сейчас в наличии: @currentStock шт.</span>
-                                            }
-                                            else
-                                            {
-                                                <span>Сейчас размер снова закончился.</span>
-                                            }
-                                        </small>
-                                    }
-                                    else
-                                    {
-                                        <small class="text-muted">Ожидаем поступления.</small>
-                                    }
-                                </div>
-                                <form method="post" asp-action="DeleteStockNotification"
-                                      asp-route-id="@notification.Id">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Убрать</button>
-                                </form>
-                            </div>
+        <div class="tab-content account-content" id="accountTabsContent">
+            <section class="tab-pane active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <div class="account-panel">
+                    <h2>Личные данные</h2>
+                    <form id="profileForm" class="account-form" method="post" asp-action="UpdateProfile">
+                        <div>
+                            <label for="firstName">Имя</label>
+                            <input id="firstName" class="form-control" name="firstName" value="@Model.FirstName" autocomplete="given-name" maxlength="100" required>
                         </div>
-                    }
+                        <div>
+                            <label for="lastName">Фамилия</label>
+                            <input id="lastName" class="form-control" name="lastName" value="@Model.LastName" autocomplete="family-name" maxlength="100" required>
+                        </div>
+                        <div>
+                            <label for="email">Email для входа</label>
+                            <input id="email" class="form-control" type="email" name="email" value="@Model.Email" readonly>
+                        </div>
+                        <div>
+                            <label for="phone">Телефон</label>
+                            <input id="phone" class="form-control" type="tel" name="phone" value="@Model.PhoneNumber" autocomplete="tel" maxlength="32">
+                        </div>
+                        <div class="form-wide"><button type="submit" class="btn btn-primary">Сохранить изменения</button></div>
+                    </form>
                 </div>
-            }
-        </div>
+                <div class="account-panel">
+                    <h2>Смена пароля</h2>
+                    <form id="passwordForm" class="account-form" method="post" asp-action="ChangePassword">
+                        <div class="form-wide">
+                            <label for="currentPassword">Текущий пароль</label>
+                            <input id="currentPassword" class="form-control" type="password" name="currentPassword" autocomplete="current-password" required>
+                        </div>
+                        <div>
+                            <label for="newPassword">Новый пароль</label>
+                            <input id="newPassword" class="form-control" type="password" name="newPassword" autocomplete="new-password" minlength="6" maxlength="100" required>
+                        </div>
+                        <div>
+                            <label for="confirmPassword">Повторите новый пароль</label>
+                            <input id="confirmPassword" class="form-control" type="password" name="confirmPassword" autocomplete="new-password" required>
+                        </div>
+                        <div class="form-wide"><button type="submit" class="btn btn-outline-secondary">Изменить пароль</button></div>
+                    </form>
+                </div>
+            </section>
 
-        <!-- АДРЕСА -->
-                <div class="tab-pane fade" id="addresses" role="tabpanel">
-            @{
-                var addresses = (List<Loom.Models.Address>)ViewBag.Addresses;
-            }
-
-            @if (addresses.Count == 0)
-            {
-                <p class="text-muted">У вас пока нет адресов. Добавьте первый ниже.</p>
-            }
-
-            <div class="row g-3 mb-4">
-                @foreach (var a in addresses)
+            <section class="tab-pane account-panel" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                <h2>Мои заказы</h2>
+                @if (orders.Count == 0)
                 {
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="d-flex justify-content-between">
-                                <strong>@a.Title</strong>
-                                @if (a.IsDefault)
+                    <p class="account-muted">У вас пока нет заказов.</p>
+                    <a class="account-link" href="/#catalog">Перейти в каталог</a>
+                }
+                @foreach (var order in orders)
+                {
+                    <article class="account-entry">
+                        <div class="account-entry-heading">
+                            <h3>Заказ №@order.Id</h3>
+                            <span class="account-status">@order.Status</span>
+                        </div>
+                        <p class="account-meta">@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</p>
+                        @if (order.Items.Count > 0)
+                        {
+                            <ul class="account-lines">
+                                @foreach (var item in order.Items)
                                 {
-                                    <span class="badge bg-primary">По умолчанию</span>
+                                    <li>
+                                        <div>
+                                            @(item.ProductName ?? item.Product?.Name)
+                                            @if (!string.IsNullOrEmpty(item.VariantSize) || !string.IsNullOrEmpty(item.VariantColor))
+                                            {
+                                                <small>@item.VariantSize @item.VariantColor</small>
+                                            }
+                                        </div>
+                                        <span>× @item.Quantity</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        @if (!string.IsNullOrEmpty(order.ShippingCity) && !string.IsNullOrEmpty(order.ShippingStreet))
+                        {
+                            <p class="account-muted">Доставка · @order.ShippingAddressTitle, г. @order.ShippingCity, @order.ShippingStreet</p>
+                        }
+                        <p class="account-muted">@order.PaymentMethod · @order.PaymentStatus</p>
+                        <p class="account-total">Итого <strong>@order.Total.ToString("C0", culture)</strong></p>
+                        @if (order.History.Count > 0)
+                        {
+                            <details class="account-history">
+                                <summary>История заказа (@order.History.Count)</summary>
+                                <ul>
+                                    @foreach (var entry in order.History)
+                                    {
+                                        <li>
+                                            <time>@entry.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</time>
+                                            @entry.EventType · @entry.Status · @entry.PaymentStatus
+                                        </li>
+                                    }
+                                </ul>
+                            </details>
+                        }
+                        @if (order.Status == OrderStatuses.New || order.Status == OrderStatuses.Confirmed)
+                        {
+                            <form method="post" asp-action="CancelOrder" asp-route-id="@order.Id" onsubmit="return confirm('Отменить заказ #@order.Id?');">
+                                <button type="submit" class="account-link account-remove">Отменить заказ</button>
+                            </form>
+                        }
+                    </article>
+                }
+            </section>
+
+            <section class="tab-pane" id="addresses" role="tabpanel" aria-labelledby="addresses-tab">
+                <div class="account-panel">
+                    <h2>Адреса доставки</h2>
+                    @if (addresses.Count == 0)
+                    {
+                        <p class="account-muted">У вас пока нет сохранённых адресов.</p>
+                    }
+                    @foreach (var address in addresses)
+                    {
+                        <article class="account-entry">
+                            <div class="account-entry-heading">
+                                <h3>@address.Title</h3>
+                                @if (address.IsDefault)
+                                {
+                                    <span class="account-status">По умолчанию</span>
                                 }
                             </div>
-                            <p class="mb-1 mt-2">г. @a.City, @a.Street</p>
-                            <small class="text-muted">@Model.FirstName @Model.LastName @Model.PhoneNumber</small>
-                            <div class="mt-3">
-                                <form method="post" asp-action="DeleteAddress" asp-route-id="@a.Id" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
-                                </form>
-                            </div>
+                            <p class="my-2">г. @address.City, @address.Street</p>
+                            <small class="account-muted">@Model.FirstName @Model.LastName @Model.PhoneNumber</small>
+                            <form method="post" asp-action="DeleteAddress" asp-route-id="@address.Id">
+                                <button type="submit" class="account-link account-remove">Удалить адрес</button>
+                            </form>
+                        </article>
+                    }
+                </div>
+                <div class="account-panel">
+                    <h2>Добавить адрес</h2>
+                    <form id="addressForm" class="account-form" method="post" asp-action="AddAddress">
+                        <div>
+                            <label for="addressTitle">Название</label>
+                            <input id="addressTitle" class="form-control" name="title" placeholder="Например, Дом" maxlength="80">
                         </div>
-                    </div>
+                        <div>
+                            <label for="addressCity">Город</label>
+                            <input id="addressCity" class="form-control" name="city" autocomplete="address-level2" maxlength="100" required>
+                        </div>
+                        <div class="form-wide">
+                            <label for="addressStreet">Улица, дом, квартира</label>
+                            <input id="addressStreet" class="form-control" name="street" autocomplete="street-address" maxlength="200" required>
+                        </div>
+                        <div class="form-wide"><button type="submit" class="btn btn-primary">Добавить адрес</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="tab-pane account-panel" id="stock-notifications" role="tabpanel" aria-labelledby="stock-notifications-tab">
+                <h2>Поступления</h2>
+                @if (subscriptions.Count == 0)
+                {
+                    <p class="account-muted">Подписок пока нет. На странице товара можно подписаться на отсутствующий размер.</p>
+                    <a class="account-link" href="/#catalog">Перейти в каталог</a>
                 }
-            </div>
-
-            <h6 class="mb-3">Добавить адрес</h6>
-            <form id="addressForm" class="row g-3" method="post" asp-action="AddAddress">
-                <div class="col-md-6">
-                    <input type="text" class="form-control" name="title" placeholder="Название (например, Домашний)">
-                </div>
-                <div class="col-md-6">
-                    <input type="text" class="form-control" name="city" placeholder="Город" required>
-                </div>
-                <div class="col-12">
-                    <input type="text" class="form-control" name="street" placeholder="Улица, дом, квартира" required>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Добавить</button>
-                </div>
-            </form>
+                @foreach (var notification in subscriptions)
+                {
+                    var currentStock = notification.Product?.Variants
+                        .Where(variant => string.Equals(variant.Size, notification.Size, StringComparison.OrdinalIgnoreCase))
+                        .Sum(variant => variant.Stock) ?? 0;
+                    <article class="account-entry">
+                        <h3><a href="/Products/@notification.ProductId">@notification.Product?.Name</a></h3>
+                        <p class="my-2">Размер @notification.Size</p>
+                        <p class="account-muted">
+                            @if (notification.NotifiedAt.HasValue)
+                            {
+                                <span>Поступление было @notification.NotifiedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm").</span>
+                                <span>@(currentStock > 0 ? $"Сейчас в наличии: {currentStock} шт." : "Сейчас размер снова закончился.")</span>
+                            }
+                            else
+                            {
+                                <span>Ожидаем поступления.</span>
+                            }
+                        </p>
+                        <form method="post" asp-action="DeleteStockNotification" asp-route-id="@notification.Id">
+                            <button type="submit" class="account-link account-remove">Убрать подписку</button>
+                        </form>
+                    </article>
+                }
+            </section>
         </div>
-
     </div>
 </main>
 
 @section Scripts {
-    <script>
-        if (window.location.hash === '#addresses') {
-            bootstrap.Tab.getOrCreateInstance(document.getElementById('addresses-tab')).show();
-        }
-        if (window.location.hash === '#stock-notifications') {
-            bootstrap.Tab.getOrCreateInstance(document.getElementById('stock-notifications-tab')).show();
-        }
-    </script>
+    <script src="~/js/account.js" asp-append-version="true"></script>
 }

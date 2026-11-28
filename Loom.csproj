@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Loom</AssemblyName>
     <RootNamespace>Loom</RootNamespace>
+    <UserSecretsId>d6581a12-9efd-4862-89b0-7cb989581c87</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,7 +6,7 @@ localStorage.setItem('cart', JSON.stringify(window.cart));
 // Обновляем счётчик в шапке
 function updateCartBadge() {
     const total = window.cart.reduce((sum, item) => sum + item.qty, 0);
-    document.querySelector('.badge').textContent = total;
+    document.getElementById('cart-count').textContent = total;
 }
 
 document.querySelectorAll('.variant-select').forEach(select => {
@@ -55,17 +55,3 @@ document.querySelectorAll('.add-to-cart').forEach(btn => {
 });
 
 updateCartBadge();
-//(конец по главной странице)
-
-
-
-
-
-
-
-
-
-
-if (document.querySelector('.badge')) {
-    updateCartBadge();
-}

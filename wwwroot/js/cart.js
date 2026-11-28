@@ -51,7 +51,7 @@ function renderCart() {
             <td class="text-center">
                 <div class="input-group input-group-sm justify-content-center" style="max-width:120px; margin:auto;">
                     <button class="btn btn-outline-secondary btn-minus" data-index="${index}">−</button>
-                    <input type="text" class="form-control text-center" value="${item.qty}" readonly>
+                    <span class="cart-quantity" aria-label="Количество: ${item.qty}">${item.qty}</span>
                     <button class="btn btn-outline-secondary btn-plus" data-index="${index}"
                             ${item.qty >= item.stock ? 'disabled' : ''}>+</button>
                 </div>

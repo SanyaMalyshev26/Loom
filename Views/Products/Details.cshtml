@@ -1,9 +1,11 @@
 @using System.Globalization
+@using Loom.Models
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @model Loom.Models.Product
 @{
     ViewData["Title"] = Model.Name;
     var currencyCulture = CultureInfo.GetCultureInfo(Configuration["Store:Culture"] ?? "ru-RU");
+    var illustration = ProductArtwork.GetIllustration(Model);
     var availableStock = Model.Variants.Where(variant => variant.IsActive).Sum(variant => variant.Stock);
 }
 
@@ -23,8 +25,21 @@
 
     <article class="row g-4 g-lg-5 mt-1 product-card">
         <div class="col-md-6">
-            <img src="@Model.ImageUrl" class="img-fluid rounded shadow-sm w-100"
-                 alt="@Model.Name" style="max-height:640px;object-fit:contain">
+            @if (illustration != null)
+            {
+                <div class="product-artwork">
+                    <img src="@Url.Content(illustration)" alt="@Model.Name — контурная иллюстрация">
+                </div>
+            }
+            else if (!ProductArtwork.UsesPlaceholder(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" class="img-fluid rounded shadow-sm w-100"
+                     alt="@Model.Name" style="max-height:640px;object-fit:contain">
+            }
+            else
+            {
+                <div class="product-artwork text-muted">Изображение отсутствует</div>
+            }
         </div>
 
         <div class="col-md-6">
@@ -68,7 +83,7 @@
             }
             else
             {
-                <div class="alert alert-secondary">Варианты товара пока не добавлены.</div>
+                <div class="alert alert-secondary">Товар пока нельзя добавить в корзину: варианты размера и цвета ещё не добавлены.</div>
             }
 
             @{
@@ -112,35 +127,39 @@
                 </section>
             }
 
-            <details class="mt-4">
-                <summary class="fw-semibold">Подобрать размер по меркам</summary>
-                <form class="size-recommendation-form mt-3"
-                      data-url="/Products/@Model.Id/SizeRecommendation">
-                    <p class="small text-muted">
-                        Укажите известные мерки в сантиметрах. Они не сохраняются.
-                        Подбор ориентировочный и не гарантирует посадку.
-                    </p>
-                    <div class="row g-2">
-                        <div class="col-sm-4">
-                            <label class="form-label small" for="chest-@Model.Id">Грудь, см</label>
-                            <input id="chest-@Model.Id" class="form-control" type="number"
-                                   min="30" max="200" step="0.1" data-measure="chest">
+            @if (Model.SizeGuides.Count > 0)
+            {
+                <details class="mt-4">
+                    <summary class="fw-semibold">Подобрать размер по меркам</summary>
+                    <form class="size-recommendation-form mt-3"
+                          data-url="/Products/@Model.Id/SizeRecommendation">
+                        <p class="small text-muted">
+                            Укажите известные мерки в сантиметрах. Они не сохраняются.
+                            Подбор ориентировочный и не гарантирует посадку.
+                        </p>
+                        <div class="row g-2">
+                            <div class="col-sm-4">
+                                <label class="form-label small" for="chest-@Model.Id">Грудь, см</label>
+                                <input id="chest-@Model.Id" class="form-control" type="number"
+                                       min="30" max="200" step="0.1" data-measure="chest">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small" for="waist-@Model.Id">Талия, см</label>
+                                <input id="waist-@Model.Id" class="form-control" type="number"
+                                       min="30" max="200" step="0.1" data-measure="waist">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small" for="hips-@Model.Id">Бёдра, см</label>
+                                <input id="hips-@Model.Id" class="form-control" type="number"
+                                       min="30" max="200" step="0.1" data-measure="hips">
+                            </div>
                         </div>
-                        <div class="col-sm-4">
-                            <label class="form-label small" for="waist-@Model.Id">Талия, см</label>
-                            <input id="waist-@Model.Id" class="form-control" type="number"
-                                   min="30" max="200" step="0.1" data-measure="waist">
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="form-label small" for="hips-@Model.Id">Бёдра, см</label>
-                            <input id="hips-@Model.Id" class="form-control" type="number"
-                                   min="30" max="200" step="0.1" data-measure="hips">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-outline-secondary mt-3">Подобрать размер</button>
-                    <div class="size-recommendation-result small mt-2" role="status" aria-live="polite"></div>
-                </form>
-            </details>
+                        <button type="submit" class="btn btn-outline-secondary mt-3">Подобрать размер</button>
+                        <div class="size-recommendation-result small mt-2" role="status" aria-live="polite"></div>
+                    </form>
+                </details>
+
+            }
 
             @if (Model.SizeGuides.Count > 0)
             {

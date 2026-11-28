@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Loom.Data;
@@ -33,7 +34,7 @@ public class AccountController : Controller
     {
         var user = await _userManager.GetUserAsync(User);
         ViewBag.Orders = await _db.Orders
-            .Where(o => o.UserId == user!.Id)
+            .Where(o => o.UserId == user!.Id && o.Status != OrderStatuses.Cancelled)
             .Include(order => order.Items)
                 .ThenInclude(item => item.Product)
             .Include(order => order.History.OrderBy(entry => entry.CreatedAt).ThenBy(entry => entry.Id))
@@ -81,10 +82,7 @@ public class AccountController : Controller
 
         var result = await _userManager.CreateAsync(user, model.Password);
         if (result.Succeeded)
-        {
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            return RedirectToAction("Index");
-        }
+            return RedirectToAction(nameof(Login));
 
         foreach (var error in result.Errors)
             ModelState.AddModelError("", error.Description);
@@ -93,26 +91,91 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login() => View();
+    public IActionResult Login(string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
+    }
 
-    [HttpPost]
-    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+    [HttpPost, EnableRateLimiting("email-login")]
+    public async Task<IActionResult> Login(LoginViewModel model, [FromServices] LoginCodeDelivery delivery,
+        [FromServices] LoginCodes codes, string? returnUrl = null)
     {
         if (!ModelState.IsValid)
             return View(model);
 
-        var result = await _signInManager.PasswordSignInAsync(
-            model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-        if (result.Succeeded)
+        ViewData["ReturnUrl"] = returnUrl;
+        codes.Remove(Request.Cookies[LoginCodes.CookieName]);
+        var user = await _userManager.FindByNameAsync(model.Email.Trim());
+        if (user?.Email is not { } email ||
+            !(await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true)).Succeeded)
         {
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
-            return RedirectToAction("Index");
+            ModelState.AddModelError("", "Неверный email или пароль, либо вход временно заблокирован.");
+            return View(model);
         }
 
-        ModelState.AddModelError("", "Неверный email или пароль");
-        return View(model);
+        var code = LoginCodes.NewCode();
+        var key = codes.Create(code, user.Id, await _userManager.GetSecurityStampAsync(user), model.RememberMe,
+            Url.IsLocalUrl(returnUrl) ? returnUrl : null);
+        if (!delivery.Enqueue(new LoginCodeDelivery.Message(key, email, code)))
+        {
+            codes.Remove(key);
+            ModelState.AddModelError("", "Не удалось отправить код. Попробуйте войти позже.");
+            return View(model);
+        }
+
+        Response.Cookies.Append(LoginCodes.CookieName, key, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Strict,
+            MaxAge = LoginCodes.Lifetime,
+            IsEssential = true
+        });
+        return RedirectToAction(nameof(VerifyLogin));
+    }
+
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public IActionResult VerifyLogin([FromServices] LoginCodes codes)
+    {
+        var key = Request.Cookies[LoginCodes.CookieName];
+        if (!codes.Exists(key))
+            return RedirectToAction(nameof(Login));
+        if (codes.HasDeliveryFailed(key))
+            ViewData["DeliveryFailed"] = true;
+        return View();
+    }
+
+    [HttpPost, EnableRateLimiting("email-login")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> VerifyLogin(LoginCodeViewModel model, [FromServices] LoginCodes codes)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var key = Request.Cookies[LoginCodes.CookieName];
+        if (codes.HasDeliveryFailed(key))
+        {
+            ModelState.AddModelError("", "Не удалось отправить код. Начните вход заново.");
+            return View(model);
+        }
+
+        var login = codes.Verify(key, model.Code);
+        if (login == null)
+        {
+            ModelState.AddModelError("", "Код неверен или истёк. Чтобы получить новый код, начните вход заново.");
+            return View(model);
+        }
+
+        Response.Cookies.Delete(LoginCodes.CookieName);
+        var user = await _userManager.FindByIdAsync(login.UserId);
+        if (user == null || await _userManager.GetSecurityStampAsync(user) != login.SecurityStamp ||
+            await _userManager.IsLockedOutAsync(user) || !await _signInManager.CanSignInAsync(user))
+            return RedirectToAction(nameof(Login));
+
+        await _signInManager.SignInAsync(user, login.RememberMe);
+        return login.ReturnUrl is { } location ? LocalRedirect(location) : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -208,7 +271,7 @@ public class AccountController : Controller
             title?.Length > 80)
         {
             TempData["Error"] = "Укажите город (до 100 символов) и улицу (до 200 символов); название адреса — до 80 символов.";
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Account", null, "addresses");
         }
 
         var hasAny = await _db.Addresses.AnyAsync(a => a.UserId == user.Id);
@@ -224,7 +287,7 @@ public class AccountController : Controller
         await _db.SaveChangesAsync();
 
         TempData["Message"] = "Адрес добавлен";
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "Account", null, "addresses");
     }
 
     [Authorize]
@@ -259,7 +322,7 @@ public class AccountController : Controller
 
             TempData["Message"] = "Адрес удалён";
         }
-        return RedirectToAction("Index");
+        return RedirectToAction("Index", "Account", null, "addresses");
     }
 
     [Authorize]

@@ -1,0 +1,23 @@
+@model Loom.Models.LoginCodeViewModel
+@{
+    ViewData["Title"] = "Код входа";
+}
+<main class="container my-5" style="max-width:480px;">
+    <h1 class="h2 mb-3">Код входа</h1>
+    @if (ViewData["DeliveryFailed"] is true)
+    {
+        <p class="text-danger" role="alert">Не удалось отправить код. Начните вход заново.</p>
+    }
+    else
+    {
+        <p>Код отправляется на вашу почту. Введите его здесь в течение 5 минут.</p>
+    }
+    <form method="post" asp-action="VerifyLogin">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-2" role="alert"></div>
+        <label asp-for="Code" class="form-label">Код из письма</label>
+        <input asp-for="Code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="form-control">
+        <span asp-validation-for="Code" class="text-danger"></span>
+        <button type="submit" class="btn btn-primary w-100 mt-3">Подтвердить вход</button>
+    </form>
+    <a asp-action="Login" class="d-inline-block mt-3">Начать вход заново</a>
+</main>

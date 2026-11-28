@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 360">
+  <defs>
+    <linearGradient id="fabric" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#28241e"/>
+      <stop offset="1" stop-color="#151311"/>
+    </linearGradient>
+  </defs>
+  <path d="M118 67q42 23 84 0l39 16q15 7 20 29l24 152-45 12-20-109v135H100V167L80 276l-45-12 24-152q5-22 20-29z" fill="url(#fabric)" stroke="#c8b89a" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M118 67q10 36 42 36t42-36M125 71q11 23 35 23t35-23M101 277h118M38 243l46 12m152 0 46-12M113 278v23m13-23v23m14-23v23m14-23v23m14-23v23m14-23v23m14-23v23m12-23v23" fill="none" stroke="#a39680" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

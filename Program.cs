@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
+using System.Threading.Channels;
 using Loom.Data;
 using Microsoft.AspNetCore.Identity;
 using Loom.Models;
@@ -8,11 +10,19 @@ using Loom.Services.Images;
 using Loom.Services.StockNotifications;
 
 
-var builder = WebApplication.CreateBuilder(args);
+var resetAdminPassword = args is ["--reset-admin-password", _];
+var builder = WebApplication.CreateBuilder(resetAdminPassword ? [] : args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=shop.db"));
 builder.Services.AddScoped<OrderCancellationService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<LoginCodes>();
+builder.Services.AddSingleton<StoreEmail>();
+builder.Services.AddSingleton(Channel.CreateBounded<LoginCodeDelivery.Message>(
+    new BoundedChannelOptions(100) { SingleReader = true, FullMode = BoundedChannelFullMode.Wait }));
+builder.Services.AddSingleton<LoginCodeDelivery>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<LoginCodeDelivery>());
 builder.Services.AddScoped<StockNotificationService>();
 builder.Services.AddHttpClient<IImageProcessingClient, ImageProcessingClient>((services, client) =>
 {
@@ -61,7 +71,39 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("email-login", context =>
+        RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(5) }));
+    options.AddPolicy("password-recovery", context =>
+        RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 8, Window = TimeSpan.FromMinutes(10) }));
+});
+
 var app = builder.Build();
+
+if (resetAdminPassword)
+{
+    using var scope = app.Services.CreateScope();
+    var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var admin = await users.FindByEmailAsync(args[1]);
+    if (admin == null || !await users.IsInRoleAsync(admin, "Admin"))
+    {
+        Console.Error.WriteLine("Администратор не найден.");
+        Environment.ExitCode = 1;
+        return;
+    }
+
+    var password = Console.ReadLine() ?? "";
+    var token = await users.GeneratePasswordResetTokenAsync(admin);
+    var result = await users.ResetPasswordAsync(admin, token, password);
+    Console.WriteLine(result.Succeeded ? "Пароль администратора обновлён." : string.Join(" ", result.Errors.Select(error => error.Description)));
+    Environment.ExitCode = result.Succeeded ? 0 : 1;
+    return;
+}
+
 // Создаём роль Admin и назначаем её пользователю из настроек
 using (var scope = app.Services.CreateScope())
 {
@@ -98,6 +140,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
